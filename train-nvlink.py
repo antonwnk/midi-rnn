@@ -6,6 +6,7 @@ from keras.layers import Dense, Activation, Dropout
 from keras.layers import LSTM, GRU, SimpleRNN
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, TensorBoard
 from keras.optimizers import SGD, RMSprop, Adagrad, Adadelta, Adam, Adamax, Nadam
+from keras.utils import multi_gpu_model
 
 OUTPUT_SIZE = 129 # 0-127 notes + 1 for rests
 
@@ -76,7 +77,7 @@ def get_model(args, experiment_dir=None):
         recurrent_layer = SimpleRNN
 
     if not experiment_dir:
-        model = Sequential()
+        model = Sequential(weights=None)
         for layer_index in range(args.num_layers):
             kwargs = dict() 
             kwargs['units'] = args.rnn_size
@@ -133,6 +134,7 @@ def get_model(args, experiment_dir=None):
     else: # so instead lets use a default (no training occurs anyway)
         optimizer = Adam()
 
+    model = multi_gpu_model(model, cpu_merge=False)
     model.compile(loss='categorical_crossentropy', 
                   optimizer=optimizer,
                   metrics=['accuracy'])
