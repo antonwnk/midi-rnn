@@ -163,7 +163,7 @@ def get_callbacks(experiment_dir, checkpoint_monitor='val_acc'):
                                        min_lr=0))
 
     callbacks.append(TensorBoard(log_dir=os.path.join(experiment_dir, 'tensorboard-logs'), 
-                                 histogram_freq=1, 
+                                 histogram_freq=0, 
                                  write_graph=True, 
                                  write_images=False))
 
