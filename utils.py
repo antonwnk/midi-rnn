@@ -73,7 +73,7 @@ def create_experiment_dir(experiment_dir, verbose=False):
 
     return experiment_dir
 
-# load data with a lazzy loader
+# load data with a lazy loader
 def get_data_generator(midi_paths, 
                        window_size=20, 
                        batch_size=32,

@@ -54,11 +54,15 @@ def parse_args():
                         help='a note to self about the experiment saved to message.txt '\
                         'in --experiment_dir.')
     parser.add_argument('--n_jobs', '-j', type=int, default=1, 
-                        help='Number of CPUs to use when loading and parsing midi files.')
+                        help='number of CPUs to use when loading and parsing midi files.')
     parser.add_argument('--max_files_in_ram', default=25, type=int,
-                        help='The maximum number of midi files to load into RAM at once.'\
+                        help='the maximum number of midi files to load into RAM at once.'\
                         ' A higher value trains faster but uses more RAM. A lower value '\
                         'uses less RAM but takes significantly longer to train.')
+    parser.add_argument('--verbosity', '-v', type=int,
+                        choices=[0, 1, 2], default=1,
+                        help='verbosity level for Keras model fitting. See '\
+                        'https://keras.io/models/model/#fit for details')
     return parser.parse_args()
 
 # create or load a saved model
@@ -240,9 +244,9 @@ def main():
     model.fit_generator(train_generator,
                         steps_per_epoch=len(midi_files) * magic_number / args.batch_size, 
                         epochs=args.num_epochs,
-                        validation_data=val_generator, 
+                        validation_data=val_generator,
                         validation_steps=len(midi_files) * 0.2 * magic_number / args.batch_size,
-                        verbose=1, 
+                        verbose=args.verbosity, 
                         callbacks=callbacks,
                         initial_epoch=epoch)
     utils.log('Finished in {:.2f} seconds'.format(time.time() - start_time), args.verbose)
