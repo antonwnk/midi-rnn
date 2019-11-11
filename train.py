@@ -3,11 +3,13 @@ import os, argparse, time
 import utils
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Dropout
-from keras.layers import LSTM
+from keras.layers import LSTM, GRU, SimpleRNN
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, TensorBoard
 from keras.optimizers import SGD, RMSprop, Adagrad, Adadelta, Adam, Adamax, Nadam
 
 OUTPUT_SIZE = 129 # 0-127 notes + 1 for rests
+
+# TODO: Tensorboard live ; units????? ; early stopping?
 
 def parse_args():
 
@@ -20,6 +22,10 @@ def parse_args():
                         default='experiments/default',
                         help='directory to store checkpointed models and tensorboard logs.' \
                              'if omitted, will create a new numbered folder in experiments/.')
+    parser.add_argument('--layer_type', type=str, 
+                        choices=['lstm', 'gru', 'rnn'],
+                        default='lstm',
+                        help='the type of the recurrent layer to use.')
     parser.add_argument('--rnn_size', type=int, default=64,
                         help='size of RNN hidden state')
     parser.add_argument('--num_layers', type=int, default=1,
@@ -61,6 +67,14 @@ def get_model(args, experiment_dir=None):
     
     epoch = 0
     
+    recurrent_layer = None
+    if args.layer_type == 'lstm':
+        recurrent_layer = LSTM
+    elif args.layer_type == 'gru':
+        recurrent_layer = GRU
+    else:
+        recurrent_layer = SimpleRNN
+
     if not experiment_dir:
         model = Sequential()
         for layer_index in range(args.num_layers):
@@ -73,15 +87,15 @@ def get_model(args, experiment_dir=None):
                     kwargs['return_sequences'] = False
                 else:
                     kwargs['return_sequences'] = True
-                model.add(LSTM(**kwargs))
+                model.add(recurrent_layer(**kwargs))
             else:
                 # if this is a middle layer
                 if not layer_index == args.num_layers - 1:
                     kwargs['return_sequences'] = True
-                    model.add(LSTM(**kwargs))
+                    model.add(recurrent_layer(**kwargs))
                 else: # this is the last layer
                     kwargs['return_sequences'] = False
-                    model.add(LSTM(**kwargs))
+                    model.add(recurrent_layer(**kwargs))
             model.add(Dropout(args.dropout))
         model.add(Dense(OUTPUT_SIZE))
         model.add(Activation('softmax'))
@@ -96,7 +110,7 @@ def get_model(args, experiment_dir=None):
         if args.learning_rate:
             kwargs['lr'] = args.learning_rate
 
-        # select the optimizers
+        # select the optimizers 
         if args.optimizer == 'sgd':
             optimizer = SGD(**kwargs)
         elif args.optimizer == 'rmsprop':
@@ -149,9 +163,9 @@ def get_callbacks(experiment_dir, checkpoint_monitor='val_acc'):
                                        min_lr=0))
 
     callbacks.append(TensorBoard(log_dir=os.path.join(experiment_dir, 'tensorboard-logs'), 
-                                histogram_freq=0, 
-                                write_graph=True, 
-                                write_images=False))
+                                 histogram_freq=1, 
+                                 write_graph=True, 
+                                 write_images=False))
 
     return callbacks
 
@@ -166,7 +180,7 @@ def main():
                       for path in os.listdir(args.data_dir) \
                       if '.mid' in path or '.midi' in path]
     except OSError as e:
-        log('Error: Invalid --data_dir, {} directory does not exist. Exiting.', args.verbose)
+        utils.log('Error: Invalid --data_dir, {} directory does not exist. Exiting.', args.verbose)
         exit(1)
 
     utils.log(
