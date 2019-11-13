@@ -1,4 +1,6 @@
 venv
 experiments/*
+experiments-remote/*
 !experiments/.gitkeep
+!experiments-remote/.gitkeep
 *.pyc
