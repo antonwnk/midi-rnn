@@ -1,6 +1,7 @@
-## Execution instructions (Adapted from https://github.com/brannondorsey/midi-rnn)
+## Execution instructions
+(Adapted from https://github.com/brannondorsey/midi-rnn)
 
-`midi-rnn` should work in MacOS and Linux environments. Open a terminal and run:
+Open a terminal (with a valid python installation on PATH) and run:
 ```bash
 # clone this repo
 git clone https://github.com/antonwnk/midi-rnn.git
